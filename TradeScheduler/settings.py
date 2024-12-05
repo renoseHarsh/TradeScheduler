@@ -30,6 +30,7 @@ ALLOWED_HOSTS = [
     "renoseharsh.pythonanywhere.com",
     "localhost",
     "37bc-2405-201-2-717d-f0da-52e2-e0e-73fe.ngrok-free.app",
+    os.getenv("MY_URL"),
 ]
 
 CSRF_TRUSTED_ORIGINS = [
