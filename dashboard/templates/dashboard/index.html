@@ -1,0 +1,268 @@
+{% extends 'layout.html' %}
+
+
+{% block content %}
+
+<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden content-center z-50">
+	<div class="bg-white text-white p-6 rounded-lg shadow-lg w-full max-w-md mx-auto">
+		<h2 class="text-3xl font-semibold text-center text-blue-600 mb-6">Edit Trade</h2>
+		<form>
+			{% csrf_token %}
+			<div id="formErrors" class="hidden p-4 bg-red-100 text-red-700 rounded-md space-y-2"></div>
+			<div class="space-y-4 text-black">
+				<input type="hidden" name="trade_id" id="tradeId">
+				<div>
+					<label for="edtPair" class="block text-sm font-medium text-gray-700">Pair</label>
+					<select id="edtPair" name="pair"
+						class="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+						required>
+						<option value="EUR/USD">EUR/USD</option>
+						<option value="GBP/USD">GBP/USD</option>
+						<option value="USD/JPY">USD/JPY</option>
+					</select>
+				</div>
+				<div>
+					<label for="edtUnits" id="edtUnitsLabel" class="block text-sm font-medium text-gray-700">Units</label>
+					<div class="flex items-center">
+						<input type="number" id="edtUnits" name="units"
+							class="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+							min="1" placeholder="Enter units" required>
+						<div class="ml-4 flex items-center">
+							<input type="checkbox" id="edPercentageCheckbox" class="mr-2">
+							<label for="edPercentageCheckbox" class="text-sm text-gray-700">Percentage?</label>
+						</div>
+					</div>
+				</div>
+				<div>
+					<label for="edtTakeProfit" class="block text-sm font-medium text-gray-700">Take Profit</label>
+					<input type="number" id="edtTakeProfit" name="take_profit"
+						class="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+						min="1" placeholder="Enter take profit" required>
+				</div>
+				<div>
+					<label for="edtStopLoss" class="block text-sm font-medium text-gray-700">Stop Loss</label>
+					<input type="number" id="edtStopLoss" name="stop_loss"
+						class="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+						min="1" placeholder="Enter stop loss" required>
+				</div>
+				<div>
+					<label for="edtScheduledTime" class="block text-sm font-medium text-gray-700">Scheduled Time</label>
+					<input type="datetime-local" id="edtScheduledTime" name="scheduled_time"
+						class="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+						required>
+				</div>
+			</div>
+			<div class="mt-6 flex justify-between gap-4">
+				<button type="submit"
+					class="w-1/2 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 active:bg-blue-800 transition duration-200">
+					Edit
+				</button>
+				<button type="button" id="closeEditBtn"
+					class="w-1/2 text-center bg-gray-500 text-white py-2 rounded-md hover:bg-gray-600 active:bg-gray-700 transition duration-200">
+					Cancel
+				</button>
+			</div>
+		</form>
+	</div>
+</div>
+
+<div class="flex flex-1">
+	<div class="flex items-start flex-1 m-4 justify-center rounded-md bg-[#ffffff] shadow-lg">
+		<div class="flex flex-col gap-2">
+			<div class="flex flex-col items-center px-4 bg-blue-600 text-white rounded-lg shadow-md mx-auto">
+				<span class="text-lg font-semibold">Scheduled</span>
+				<span class="text-2xl font-bold">{{data|length}}</span>
+			</div>
+			<div class="overflow-y-scroll max-h-[500px]">
+				<table class="table w-full text-sm text-gray-700 border-collapse shadow-lg rounded-lg">
+					<thead class="bg-blue-600 text-white sticky top-0">
+						<tr>
+							<th class="p-3 text-left">Forex Pair</th>
+							<th class="p-3 text-left">Units/Percentage</th>
+							<th class="p-3 text-left">Take Profit</th>
+							<th class="p-3 text-left">Stop Loss</th>
+							<th class="p-3 text-left">Scheduled Time</th>
+							<th class="p-3">
+								<button class="px-4 py-2 invisible">
+									Edit
+								</button>
+							</th>
+							<th class="p-3">
+								<button class="px-4 py-2 invisible">
+									Delete
+								</button>
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for da in data %}
+						<tr class="border-b border-gray-200 hover:bg-blue-100 transition-all duration-150">
+							<td class="p-4 text-gray-800 font-medium">{{da.pair}}</td>
+							{% if da.units %}
+							<td class="p-4 text-gray-700">{{da.units}}</td>
+							{% else %}
+							<td class="p-4 text-gray-700">{{da.percentage}}%</td>
+							{% endif %}
+							<td class="p-4 text-gray-700">{{da.take_profit}} pip(s)</td>
+							<td class="p-4 text-gray-700">{{da.stop_loss}} pip(s)</td>
+							<td class="p-4 text-gray-600">{{ da.scheduled_time|date:"Y-m-d H:i" }}</td>
+							<td class="text-center">
+								<button type="button"
+									class="bg-green-500 text-white px-4 py-2 rounded-lg shadow hover:bg-green-600 active:bg-green-700 active:scale-95 transition-transform duration-200"
+									onclick="openEditModal(
+									'{{ da.id }}',
+									'{{ da.pair }}',
+									'{{ da.units|default:da.percentage }}',
+									'{% if da.units %} false {% else %} true {% endif %}',
+									'{{ da.take_profit }}',
+									'{{ da.stop_loss }}',
+									'{{ da.scheduled_time|date:" Y-m-d H:i" }}', )">
+									Edit
+								</button>
+							</td>
+							<td class="text-center">
+								<form action="{% url 'trades:delete' %}" method="POST">
+									{% csrf_token %}
+									<input type="hidden" name="trade_id" value="{{da.id}}">
+									<button
+										class="bg-red-500 text-white px-4 py-2 rounded-lg shadow hover:bg-red-600 active:bg-red-700 active:scale-95 transition-transform duration-200">
+										Delete
+									</button>
+								</form>
+							</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	<div class="flex items-start flex-1 m-4 justify-center rounded-md bg-[#ffffff] shadow-lg">
+		<div class="flex flex-col gap-2">
+			<div class="mx-auto flex gap-2">
+				<div class="flex flex-col items-center bg-green-500 text-white px-4 rounded-lg shadow-md mx-auto">
+					<span class="text-lg font-semibold">Successful</span>
+					<span class="text-2xl font-bold">90</span>
+				</div>
+				<div class="flex flex-col items-center bg-red-500 text-white px-4 rounded-lg mx-auto shadow-md">
+					<span class="text-lg font-semibold">Failed</span>
+					<span class="text-2xl font-bold">5</span>
+				</div>
+			</div>
+
+			<div class="overflow-y-scroll max-h-[500px]">
+				<table class="table w-full text-sm text-gray-700 border-collapse shadow-lg rounded-lg">
+					<thead class="bg-blue-600 text-white sticky top-0">
+						<tr>
+							<th class="p-3 text-left">Forex Pair</th>
+							<th class="p-3 text-left">Units/Percentage</th>
+							<th class="p-3 text-left">Take Profit</th>
+							<th class="p-3 text-left">Stop Loss</th>
+							<th class="p-3 text-left">Executed at</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for da in data %}
+						<tr class="border-b border-gray-200 hover:bg-blue-50 transition-all duration-150">
+							<td class="p-4 text-gray-800 font-medium">{{da.pair}}</td>
+							{% if da.units %}
+							<td class="p-4 text-gray-700">{{da.units}}</td>
+							{% else %}
+							<td class="p-4 text-gray-700">{{da.percentage}}%</td>
+							{% endif %}
+							<td class="p-4 text-gray-700">{{da.take_profit}} pip(s)</td>
+							<td class="p-4 text-gray-700">{{da.take_loss}} pip(s)</td>
+							<td class="p-4 text-gray-600">{{da.scheduled_time}}</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<script>
+	const modal = document.getElementById('editModal');
+	const closeModal = document.getElementById('closeEditBtn');
+	const tradeIdInput = document.getElementById('tradeId');
+	const pairInput = document.getElementById('edtPair');
+	const percentageCheckbox = document.getElementById('edPercentageCheckbox');
+	const unitsLabel = document.getElementById('edtUnitsLabel');
+	const unitsInput = document.getElementById('edtUnits');
+	const takeProfitInput = document.getElementById('edtTakeProfit');
+	const stopLossInput = document.getElementById('edtStopLoss');
+	const edtTime = document.getElementById('edtScheduledTime');
+
+	const ednow = new Date();
+	const edoffset = ednow.getTimezoneOffset();
+	const edlocalDate = new Date(ednow.getTime() - edoffset * 60000);
+	const edminDateTime = edlocalDate.toISOString().slice(0, 16);
+	edtTime.min = edminDateTime;
+
+	function openEditModal(id, pair, units, isPercent, takeProfit, stopLoss, scheduledTime) {
+		tradeIdInput.value = id;
+		pairInput.value = pair;
+
+
+		if (JSON.parse(isPercent)) {
+			percentageCheckbox.checked = true;
+			unitsLabel.innerText = 'Percentage';
+			unitsInput.placeholder = 'Enter percentage';
+			unitsInput.max = '100';
+		}
+		else {
+			percentageCheckbox.checked = false;
+			unitsLabel.innerText = 'Units';
+			unitsInput.placeholder = 'Enter units';
+			unitsInput.max = '';
+		}
+
+		unitsInput.value = units;
+		takeProfitInput.value = takeProfit;
+		stopLossInput.value = stopLoss;
+		const dateObj = new Date(scheduledTime);
+		const year = dateObj.getFullYear();
+		const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+		const day = dateObj.getDate().toString().padStart(2, '0');
+		const hours = dateObj.getHours().toString().padStart(2, '0');
+		const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+
+		const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}`;
+		edtTime.value = formattedDate;
+		modal.classList.remove('hidden');
+	}
+
+	percentageCheckbox.addEventListener('change', () => {
+		unitsInput.value = '';
+		if (percentageCheckbox.checked) {
+			unitsInput.placeholder = "Enter percentage";
+			unitsInput.value = "";
+			unitsInput.type = "number";
+			unitsLabel.innerText = "Percentage";
+			unitsInput.max = "100";
+			unitsInput.name = "percentage";
+		}
+		else {
+			unitsInput.placeholder = "Enter units";
+			unitsInput.value = "";
+			unitsInput.type = "number";
+			unitsLabel.innerText = "Units";
+			unitsInput.max = "";
+			unitsInput.name = "units";
+		}
+	});
+
+	closeModal.addEventListener('click', () => {
+		modal.classList.add('hidden');
+	});
+
+	window.addEventListener('click', (e) => {
+		if (e.target === modal) {
+			modal.classList.add('hidden');
+		}
+	});
+</script>
+
+{% endblock %}
