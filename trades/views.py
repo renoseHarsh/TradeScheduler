@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+import requests
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -42,6 +43,10 @@ def recieve_hook(request):
 
 
 def schedule_hook(request):
+    idk = requests.post(
+        "https://httpbin.org/post", data={"key": "reallllldaaaa"}
+    ).json()
+    print(idk)
     if request.method == "POST":
         relative_url = reverse("trades:recieve_hook")
         full_url = request.build_absolute_uri(relative_url)
