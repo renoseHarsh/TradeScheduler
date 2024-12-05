@@ -34,8 +34,7 @@ def delete(request):
 
 @csrf_exempt
 def recieve_hook(request):
-    if request.method == "POST":
-        print(now())
+    print(now())
     return JsonResponse({"status": "ok"}, status=200)
 
 
