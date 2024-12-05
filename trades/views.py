@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -34,7 +36,9 @@ def delete(request):
 
 @csrf_exempt
 def recieve_hook(request):
-    return JsonResponse({"status": now()}, status=200)
+    current_time = now()
+    modified_time = current_time + timedelta(hours=5, minutes=30)
+    return JsonResponse({"status": modified_time}, status=200)
 
 
 def schedule_hook(request):
