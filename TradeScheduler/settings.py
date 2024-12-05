@@ -29,8 +29,12 @@ DEBUG = True
 ALLOWED_HOSTS = [
     "renoseharsh.pythonanywhere.com",
     "localhost",
+    "37bc-2405-201-2-717d-f0da-52e2-e0e-73fe.ngrok-free.app",
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://37bc-2405-201-2-717d-f0da-52e2-e0e-73fe.ngrok-free.app",
+]
 
 # Application definition
 
@@ -112,7 +116,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "America/New_York"
 
 USE_I18N = True
 

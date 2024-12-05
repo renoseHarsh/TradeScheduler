@@ -6,6 +6,7 @@ from TradeScheduler.decorators import anonymous_required
 
 from .forms import CustomAuthenticationForm, CustomUserCreationForm
 from .models import AccessToken
+from .utils import get_customer_id
 
 
 # Create your views here.
@@ -47,11 +48,17 @@ def logout_view(request):
 def add_access_token(request):
     if request.method == "POST":
         accessToken = request.POST.get("accessToken")
+        customer_id = get_customer_id(accessToken)
         try:
             access_token = request.user.accesstoken
-            access_token.token = accessToken
+            access_token.token = accessToken if customer_id else ""
+            access_token.customer_id = customer_id
             access_token.save()
         except AccessToken.DoesNotExist:
-            AccessToken.objects.create(user=request.user, token=accessToken)
+            AccessToken.objects.create(
+                user=request.user,
+                token=accessToken if customer_id else "",
+                customer_id=customer_id,
+            )
 
     return redirect("dashboard:index")

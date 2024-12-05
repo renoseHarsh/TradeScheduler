@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 
-
 {% block content %}
+{% load tz %}
 
 <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden content-center z-50">
 	<div class="bg-white text-white p-6 rounded-lg shadow-lg w-full max-w-md mx-auto">
@@ -67,18 +67,19 @@
 </div>
 
 <div class="flex flex-1">
+
 	<div class="flex items-start flex-1 m-4 justify-center rounded-md bg-[#ffffff] shadow-lg">
 		<div class="flex flex-col gap-2">
 			<div class="flex flex-col items-center px-4 bg-blue-600 text-white rounded-lg shadow-md mx-auto">
 				<span class="text-lg font-semibold">Scheduled</span>
 				<span class="text-2xl font-bold">{{data|length}}</span>
 			</div>
-			<div class="overflow-y-scroll max-h-[500px]">
+			<div class="overflow-y-scroll max-h-[500px] mx-4">
 				<table class="table w-full text-sm text-gray-700 border-collapse shadow-lg rounded-lg">
 					<thead class="bg-blue-600 text-white sticky top-0">
 						<tr>
 							<th class="p-3 text-left">Forex Pair</th>
-							<th class="p-3 text-left">Units/Percentage</th>
+							<th class="p-3 text-left">Units/<br>Percentage</th>
 							<th class="p-3 text-left">Take Profit</th>
 							<th class="p-3 text-left">Stop Loss</th>
 							<th class="p-3 text-left">Scheduled Time</th>
@@ -105,7 +106,8 @@
 							{% endif %}
 							<td class="p-4 text-gray-700">{{da.take_profit}} pip(s)</td>
 							<td class="p-4 text-gray-700">{{da.stop_loss}} pip(s)</td>
-							<td class="p-4 text-gray-600">{{ da.scheduled_time|date:"Y-m-d H:i" }}</td>
+							<td class="p-4 text-gray-600">{{ da.scheduled_time|date:"h:i A, m/d/Y" }}
+							</td>
 							<td class="text-center">
 								<button type="button"
 									class="bg-green-500 text-white px-4 py-2 rounded-lg shadow hover:bg-green-600 active:bg-green-700 active:scale-95 transition-transform duration-200"
@@ -137,6 +139,7 @@
 			</div>
 		</div>
 	</div>
+
 	<div class="flex items-start flex-1 m-4 justify-center rounded-md bg-[#ffffff] shadow-lg">
 		<div class="flex flex-col gap-2">
 			<div class="mx-auto flex gap-2">
@@ -149,13 +152,12 @@
 					<span class="text-2xl font-bold">5</span>
 				</div>
 			</div>
-
 			<div class="overflow-y-scroll max-h-[500px]">
 				<table class="table w-full text-sm text-gray-700 border-collapse shadow-lg rounded-lg">
 					<thead class="bg-blue-600 text-white sticky top-0">
 						<tr>
 							<th class="p-3 text-left">Forex Pair</th>
-							<th class="p-3 text-left">Units/Percentage</th>
+							<th class="p-3 text-left">Units/<br>Percentage</th>
 							<th class="p-3 text-left">Take Profit</th>
 							<th class="p-3 text-left">Stop Loss</th>
 							<th class="p-3 text-left">Executed at</th>
@@ -171,8 +173,8 @@
 							<td class="p-4 text-gray-700">{{da.percentage}}%</td>
 							{% endif %}
 							<td class="p-4 text-gray-700">{{da.take_profit}} pip(s)</td>
-							<td class="p-4 text-gray-700">{{da.take_loss}} pip(s)</td>
-							<td class="p-4 text-gray-600">{{da.scheduled_time}}</td>
+							<td class="p-4 text-gray-700">{{da.stop_loss}} pip(s)</td>
+							<td class="p-4 text-gray-600">{{da.scheduled_time|date:"h:i A, m/d/Y"}}</td>
 						</tr>
 						{% endfor %}
 					</tbody>
@@ -183,7 +185,29 @@
 </div>
 
 
+
 <script>
+	function convertToLocalDateTime(datetime) {
+		const date = new Date(datetime);
+		if (isNaN(date)) {
+			throw new Error("Invalid datetime format");
+		}
+		const options = {
+			hour: '2-digit',
+			minute: '2-digit',
+			hour12: true,
+			month: '2-digit',
+			day: '2-digit',
+			year: 'numeric',
+		};
+		const timePart = date.toLocaleTimeString(undefined, options);
+		const datePart = date.toLocaleDateString(undefined, {
+			month: '2-digit',
+			day: '2-digit',
+			year: 'numeric',
+		});
+		return `${timePart.split(' ')[0]} ${timePart.split(' ')[1]}, ${datePart}`;
+	}
 	const modal = document.getElementById('editModal');
 	const closeModal = document.getElementById('closeEditBtn');
 	const tradeIdInput = document.getElementById('tradeId');

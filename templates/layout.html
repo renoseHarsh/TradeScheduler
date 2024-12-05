@@ -44,25 +44,28 @@
 									class="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
 									required>
 									<option value="" disabled selected>Select a trading pair</option>
-									<option value="EUR/USD">EUR/USD</option>
-									<option value="GBP/USD">GBP/USD</option>
-									<option value="USD/JPY">LTC/USD</option>
+									<option value="EUR_USD">EUR_USD</option>
+									<option value="AUD_USD">AUD_USD</option>
+									<option value="GBP_USD">GBP_USD</option>
 								</select>
 							</div>
 							<div>
-								<label for="units" id="unitsLabel" class="block text-sm font-medium text-gray-700">Units</label>
+								<label for="units" id="unitsLabel"
+									class="block text-sm font-medium text-gray-700">Units</label>
 								<div class="flex items-center">
 									<input type="number" id="units" name="units"
 										class="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
 										min="1" placeholder="Enter units" required>
 									<div class="ml-4 flex items-center">
 										<input type="checkbox" id="percentageCheckbox" class="mr-2">
-										<label for="percentageCheckbox" class="text-sm text-gray-700">Percentage?</label>
+										<label for="percentageCheckbox"
+											class="text-sm text-gray-700">Percentage?</label>
 									</div>
 								</div>
 							</div>
 							<div>
-								<label for="takeProfit" class="block text-sm font-medium text-gray-700">Take Profit</label>
+								<label for="takeProfit" class="block text-sm font-medium text-gray-700">Take
+									Profit</label>
 								<input type="number" id="takeProfit" name="take_profit"
 									class="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
 									min="1" placeholder="Enter take profit" required>
@@ -74,10 +77,12 @@
 									min="1" placeholder="Enter stop loss" required>
 							</div>
 							<div>
-								<label for="scheduledTime" class="block text-sm font-medium text-gray-700">Scheduled Time</label>
-								<input type="datetime-local" id="scheduledTime" name="scheduled_time"
+								<label for="scheduledTime" class="block text-sm font-medium text-gray-700">Scheduled
+									Time</label>
+								<input type="datetime-local" id="scheduledTime"
 									class="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
 									required>
+								<input type="hidden" id="realScheduledTime" name="scheduled_time">
 							</div>
 						</div>
 						<div class="mt-6 flex justify-between gap-4">
@@ -95,6 +100,36 @@
 			</div>
 
 			<script>
+				function rfc3339(d) {
+					function pad(n) {
+						return n < 10 ? "0" + n : n;
+					}
+
+					function timezoneOffset(offset) {
+						var sign;
+						if (offset === 0) {
+							return "Z";
+						}
+						sign = offset > 0 ? "-" : "+";
+						offset = Math.abs(offset);
+						return sign + pad(Math.floor(offset / 60)) + ":" + pad(offset % 60);
+					}
+
+					return (
+						d.getFullYear() +
+						"-" +
+						pad(d.getMonth() + 1) +
+						"-" +
+						pad(d.getDate()) +
+						"T" +
+						pad(d.getHours()) +
+						":" +
+						pad(d.getMinutes()) +
+						":" +
+						pad(d.getSeconds()) +
+						timezoneOffset(d.getTimezoneOffset())
+					);
+				}
 				const scheduleModal = document.getElementById('scheduleModal');
 				const openScheduleBtn = document.getElementById('openScheduleBtn');
 				const closeSceduleBtn = document.getElementById('closeSceduleBtn');
@@ -110,11 +145,16 @@
 					}
 				});
 				const scheduledTimeInput = document.getElementById('scheduledTime');
+				const realScheduledTime = document.getElementById('realScheduledTime');
 				const now = new Date();
 				const offset = now.getTimezoneOffset();
 				const localDate = new Date(now.getTime() - offset * 60000);
 				const minDateTime = localDate.toISOString().slice(0, 16);
 				scheduledTimeInput.min = minDateTime;
+				scheduledTimeInput.addEventListener('input', () => {
+					const scheduledTime = new Date(scheduledTimeInput.value);
+					realScheduledTime.value = rfc3339(scheduledTime);
+				});
 				document.getElementById('percentageCheckbox').addEventListener('change', function () {
 					const unitsInput = document.getElementById('units');
 					const unitsLabel = document.getElementById('unitsLabel');
@@ -152,7 +192,7 @@
 							<input type="text" id="accessToken" name="accessToken"
 								class="w-full px-4 py-2 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-[#007BFF]"
 								placeholder="Enter your access token" {% if request.user.accesstoken %}
-								value="{{ request.user.accesstoken.token }}" {% endif %} required>
+								value="{{ request.user.accesstoken.token }}" {% endif %}>
 						</div>
 						<div class="flex justify-between gap-2">
 							<button type="submit"
@@ -164,6 +204,7 @@
 				</div>
 			</div>
 			<script>
+				document.cookie = `timezone=${-new Date().getTimezoneOffset() * 60}; path=/`;
 				const accessModal = document.getElementById('accessModal');
 				const openTokenModalBtn = document.getElementById('openTokenModalBtn');
 				const closeModalBtn = document.getElementById('closeAccessBtn');

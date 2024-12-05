@@ -8,9 +8,9 @@ from django.utils.timezone import now
 # Create your models here.
 class ScheduledTrade(models.Model):
     PAIR_CHOICES = [
-        ("EUR/USD", "EUR/USD"),
-        ("GBP/USD", "GBP/USD"),
-        ("USD/JPY", "USD/JPY"),
+        ("EUR_USD", "EUR_USD"),
+        ("AUD_USD", "AID_USD"),
+        ("GBP_USD", "GBP_USD"),
     ]
 
     pair = models.CharField(
@@ -47,6 +47,7 @@ class ScheduledTrade(models.Model):
         null=False,
         blank=False,
     )
+    hood_id = models.CharField(max_length=50, null=True, blank=True)
 
     def __str__(self):
         return f"{self.pair} at {self.scheduled_time}"
