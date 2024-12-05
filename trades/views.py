@@ -34,8 +34,7 @@ def delete(request):
 
 @csrf_exempt
 def recieve_hook(request):
-    print(now())
-    return JsonResponse({"status": "ok"}, status=200)
+    return JsonResponse({"status": now()}, status=200)
 
 
 def schedule_hook(request):
