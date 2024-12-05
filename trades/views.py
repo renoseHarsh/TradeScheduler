@@ -1,8 +1,14 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect
+from django.http import JsonResponse
+from django.shortcuts import redirect, render
+from django.urls import reverse
+from django.utils.timezone import now
+from django.views.decorators.csrf import csrf_exempt
 
 from .form import ScheduledTradeForm
 from .models import ScheduledTrade
+
+url = "https://api.posthook.io/v1/hooks"
 
 
 # Create your views here.
@@ -24,3 +30,18 @@ def delete(request):
             print(trade)
             trade.delete()
     return redirect("dashboard:index")
+
+
+@csrf_exempt
+def recieve_hook(request):
+    if request.method == "POST":
+        print(now())
+    return JsonResponse({"status": "ok"}, status=200)
+
+
+def schedule_hook(request):
+    if request.method == "POST":
+        relative_url = reverse("trades:recieve_hook")
+        full_url = request.build_absolute_uri(relative_url)
+        print(full_url)
+    return render(request, "trades/index.html")

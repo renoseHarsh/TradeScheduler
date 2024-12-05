@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script src="https://cdn.tailwindcss.com"></script>
+	<style type="text/tailwindcss">
+		@layer base {
+			input[type="number"]::-webkit-inner-spin-button,
+			input[type="number"]::-webkit-outer-spin-button {
+				-webkit-appearance: none;
+				margin: 0;
+			}
+		}
+  </style>
+	<script src="{% static 'js/main.js' %}" defer></script>
+	<title>
+		schedule hook
+	</title>
+</head>
+
+<body class="h-[100vh] flex flex-col bg-[#003366]">
+	<form action="{% url 'trades:schedule_hook' %}" method="POST">
+		{% csrf_token %}
+		<button>Do It</button>
+	</form>
+</body>
+
+</html>
