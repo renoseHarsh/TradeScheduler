@@ -29,12 +29,11 @@ DEBUG = True
 ALLOWED_HOSTS = [
     "renoseharsh.pythonanywhere.com",
     "localhost",
-    "37bc-2405-201-2-717d-f0da-52e2-e0e-73fe.ngrok-free.app",
-    os.getenv("MY_URL"),
+    "fb7b-2405-201-2-717d-4880-af8f-5ced-c17a.ngrok-free.app",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://37bc-2405-201-2-717d-f0da-52e2-e0e-73fe.ngrok-free.app",
+    "https://fb7b-2405-201-2-717d-4880-af8f-5ced-c17a.ngrok-free.app",
 ]
 
 # Application definition
