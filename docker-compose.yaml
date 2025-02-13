@@ -1,0 +1,45 @@
+services:
+  mysql:
+    container_name: trades_db
+    image: mysql:8.0
+    volumes:
+      - tradesdb:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE="tradescheduler"
+      - MYSQL_ROOT_PASSWORD="0104"
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysql",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p0104",
+          "-e",
+          "SELECT 1",
+        ]
+      timeout: 20s
+      retries: 10
+
+  backend:
+    container_name: trades_backend
+    build:
+      context: backend/
+      dockerfile: Dockerfile
+    command: gunicorn TradeScheduler.wsgi:application --bind 0.0.0.0:8000
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=mysql
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  tradesdb:
