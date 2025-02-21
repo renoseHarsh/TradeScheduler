@@ -28,16 +28,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "bvflh9+8pd63akez84%bfbzj1(o*i048!m97f1*^ye@7g+vp5c"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "False") == "True"
+DEBUG = "True"
 
-ALLOWED_HOSTS = [
-
-]
+ALLOWED_HOSTS = []
 
 
-CSRF_TRUSTED_ORIGINS = [
-	
-]
+CSRF_TRUSTED_ORIGINS = []
 
 # Application definition
 
@@ -67,9 +63,7 @@ MIDDLEWARE = [
 
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [
-	"https://renoseharsh.pythonanywhere.com"
-]
+CORS_ALLOWED_ORIGINS = ["https://renoseharsh.pythonanywhere.com"]
 CSRF_COOKIE_HTTPONLY = False
 
 ROOT_URLCONF = "TradeScheduler.urls"
@@ -99,11 +93,11 @@ WSGI_APPLICATION = "TradeScheduler.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "",
-        "USER": "",
-        "PASSWORD": "",
-        "HOST": "",
-        "PORT": "",
+        "NAME": os.getenv("MYSQL_DATABASE", "tradescheduler"),
+        "USER": "root",
+        "PASSWORD": os.getenv("MYSQL_PASSWORD", "harsh"),
+        "HOST": os.getenv("DB_HOST", "127.0.0.1"),
+        "PORT": "3306",
     }
 }
 
@@ -132,7 +126,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "Asia/Kolkata"
+TIME_ZONE = os.getenv("TIMEZONE")
 
 USE_I18N = True
 
@@ -151,3 +145,11 @@ STATIC_ROOT = BASE_DIR / "static"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# Celery Configuration Options
+CELERY_TIMEZONE = os.getenv("TIMEZONE")
+CELERY_BROKER_URL = os.environ.get(
+    "CELERY_BROKER", "redis://redis:6379/0"
+)
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True

@@ -5,19 +5,12 @@ import os
 from decimal import ROUND_HALF_UP, Decimal
 
 import requests
-
-from .models import ScheduledTrade
-
 from dotenv import load_dotenv
-
 
 load_dotenv()
 
 PAPER_URL = "https://api-fxpractice.oanda.com"
 LIVE_URL = "https://api-fxtrade.oanda.com"
-signature_key = "acd7fe2f12084771b7f3e0e822f57ce2"
-POSTHOOK_URL = "https://api.posthook.io/v1"
-POSTHOOK_API_KEY = "fBVfOSYAKYcdpPPoDlLz03lL3X3t4jxAiUa4xCmMs-EROW8V9-SqV879eVbH23okx2eys8OoxAHGJxN-E5igJg=="
 
 usd_relation = {
     "EUR": "EUR_USD",
@@ -144,85 +137,3 @@ def send_units_request(trade, account_type, account_id, headers):
         trade.pair, units, account_id, headers, account_type, take_profit, stop_loss
     )
     return response
-
-
-def execute_trade(trade_id):
-    try:
-        trade = ScheduledTrade.objects.select_related("account").get(id=trade_id)
-    except ScheduledTrade.DoesNotExist:
-        return
-    if not trade.account:
-        trade.status = "No account"
-        return
-    account_type = trade.account.account_type
-    oanda_token = (
-        trade.account.access_token.live_token
-        if account_type == "live"
-        else trade.account.access_token.paper_token
-    )
-    headers = {
-        "Authorization": f"Bearer {oanda_token}",
-        "Accept-Datetime-Format": "RFC3339",
-        "Content-Type": "application/json",
-    }
-    account_id = trade.account.account_id
-    if trade.percentage:
-        response = send_percentage_request(trade, account_type, account_id, headers)
-    else:
-        response = send_units_request(trade, account_type, account_id, headers)
-
-    if response == -1:
-        trade.status = "Failed"
-        trade.save()
-        return
-
-    json_response = response.json()
-
-    if response.status_code != 201:
-        if "orderRejectTransaction" in json_response:
-            trade.status = json_response["orderRejectTransaction"]["rejectReason"]
-        else:
-            trade.status = "Failed"
-        trade.save()
-        return
-    if "orderCancelTransaction" in json_response:
-        trade.status = json_response["orderCancelTransaction"]["reason"]
-        trade.save()
-        return
-    trade.status = "success"
-    trade.save()
-
-
-def create_hook(trade_id, postAt):
-    url = f"{POSTHOOK_URL}/hooks"
-    headers = {
-        "Content-Type": "application/json",
-        "X-API-Key": POSTHOOK_API_KEY,
-    }
-    payload = json.dumps(
-        {
-            "path": "/api/trades/receive_trade/",
-            "postAt": postAt.isoformat(),
-            "data": {"trade_id": trade_id},
-        }
-    )
-    response = requests.post(url, headers=headers, data=payload).json()
-    return response["data"]["id"]
-
-
-def validate_hook(request):
-    signature = request.headers.get("X-Ph-Signature")
-    if not signature:
-        return False
-    body = request.body
-    h = hmac.new(key=signature_key.encode(), msg=body, digestmod=hashlib.sha256)
-    return hmac.compare_digest(h.hexdigest(), signature)
-
-
-def delete_hook(hook_id):
-    url = f"{POSTHOOK_URL}/hooks/{hook_id}"
-    headers = {
-        "Content-Type": "application/json",
-        "X-API-Key": POSTHOOK_API_KEY,
-    }
-    requests.delete(url, headers=headers)

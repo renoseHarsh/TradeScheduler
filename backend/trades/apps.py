@@ -7,6 +7,3 @@ class TradesConfig(AppConfig):
 
     def ready(self):
         import trades.signals
-
-        # from APscheduler import scheduler
-        # scheduler.start()

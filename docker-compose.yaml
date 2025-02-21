@@ -4,11 +4,8 @@ services:
     image: mysql:8.0
     volumes:
       - tradesdb:/var/lib/mysql
-    environment:
-      - MYSQL_DATABASE="tradescheduler"
-      - MYSQL_ROOT_PASSWORD="0104"
-    ports:
-      - "3306:3306"
+    env_file:
+      - .env
     healthcheck:
       test:
         [
@@ -18,28 +15,56 @@ services:
           "localhost",
           "-u",
           "root",
-          "-p0104",
+          "-p${MYSQL_PASSWORD}",
           "-e",
           "SELECT 1",
         ]
-      timeout: 20s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    container_name: trades_redis
+    image: redis:7.4.2
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 5s
       retries: 10
 
   backend:
     container_name: trades_backend
     build:
       context: backend/
-      dockerfile: Dockerfile
-    command: gunicorn TradeScheduler.wsgi:application --bind 0.0.0.0:8000
+    command: >
+      bash -c "python manage.py makemigrations &&
+                python manage.py migrate &&
+                gunicorn TradeScheduler.wsgi:application --bind 0.0.0.0:8000"
     env_file:
       - .env
     ports:
       - "8000:8000"
     environment:
       - DB_HOST=mysql
+      - CELERY_BROKER=redis://redis:6379/0
     depends_on:
       mysql:
         condition: service_healthy
 
+  celery:
+    container_name: trades_celery
+    build:
+      context: backend/
+    command: celery -A TradeScheduler worker -l INFO
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=mysql
+      - CELERY_BROKER=redis://redis:6379/0
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   tradesdb:
+  redisdata:
