@@ -6,6 +6,8 @@ services:
       - tradesdb:/var/lib/mysql
     env_file:
       - .env
+    ports:
+      - "3306:3306"
     healthcheck:
       test:
         [
@@ -15,7 +17,7 @@ services:
           "localhost",
           "-u",
           "root",
-          "-p${MYSQL_PASSWORD}",
+          "-ppassword",
           "-e",
           "SELECT 1",
         ]
@@ -25,6 +27,8 @@ services:
   redis:
     container_name: trades_redis
     image: redis:7.4.2
+    ports:
+      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       timeout: 5s
@@ -37,6 +41,7 @@ services:
     command: >
       bash -c "python manage.py makemigrations &&
                 python manage.py migrate &&
+                python manage.py createsuperuser --username=admin --email=admin@example.com --noinput
                 gunicorn TradeScheduler.wsgi:application --bind 0.0.0.0:8000"
     env_file:
       - .env
@@ -45,6 +50,7 @@ services:
     environment:
       - DB_HOST=mysql
       - CELERY_BROKER=redis://redis:6379/0
+      - DJANGO_SUPERUSER_PASSWORD=admin
     depends_on:
       mysql:
         condition: service_healthy

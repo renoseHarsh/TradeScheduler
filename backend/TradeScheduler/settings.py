@@ -93,9 +93,9 @@ WSGI_APPLICATION = "TradeScheduler.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.getenv("MYSQL_DATABASE", "tradescheduler"),
+        "NAME": os.getenv("MYSQL_DATABASE", "databasename"),
         "USER": "root",
-        "PASSWORD": os.getenv("MYSQL_PASSWORD", "harsh"),
+        "PASSWORD": os.getenv("MYSQL_ROOT_PASSWORD", "password"),
         "HOST": os.getenv("DB_HOST", "127.0.0.1"),
         "PORT": "3306",
     }
@@ -149,7 +149,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Celery Configuration Options
 CELERY_TIMEZONE = os.getenv("TIMEZONE")
-CELERY_BROKER_URL = os.environ.get(
-    "CELERY_BROKER", "redis://redis:6379/0"
-)
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "redis://redis:6379/0")
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
